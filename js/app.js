@@ -1,5 +1,3 @@
-$(function(){
-
 //Cambio colores titulo infinito
 	function colorUno(){
 		$(".main-titulo").animate(
@@ -68,31 +66,6 @@ $(function(){
 		return dulcesColumn[index];
 	}
 
-//Colocar dulces en el tablero
-	function checkBoard() {
-		fillBoard();
-	}
-
-	function fillBoard() {
-		var top = 6;
-		var column = $('[class^="col-"]');
-	
-		column.each(function () {
-			var dulces = $(this).children().length;
-			var agregar = top - dulces;
-			for (var i = 0; i < agregar; i++) {
-				var dulcesType = randomInt(1, 5);
-				if (i === 0 && dulces < 1) {
-					$(this).append('<img src="image/' + dulcesType + '.png" class="element"></img>');
-				} else {
-					$(this).find('img:eq(0)').before('<img src="image/' + dulcesType + '.png" class="element"></img>');
-				}
-			}
-		});
-
-		validaciones();
-	}
-
 //Validacion de dulces del mismo tipo
 	//Columnas
 	function validacionColumn() {
@@ -100,7 +73,7 @@ $(function(){
 			var contador = 0;
 			var dulcesPosition = [];
 			var dulcesEPosition = [];
-			var dulcesColumn = candyColumns(i);
+			var dulcesColumn = dulcesColumns(a);
 			var comparisonValue = dulcesColumn.eq(0);
 			var gap = false;
 
@@ -160,7 +133,7 @@ $(function(){
 			var contador = 0;
 			var dulcesPosition = [];
 			var dulcesEPosition = [];
-			var dulcesRow = dulcesRows(j);
+			var dulcesRow = dulcesRows(a);
 			var comparisonValue = dulcesRow[0];
 			var gap = false;
 
@@ -214,23 +187,197 @@ $(function(){
 		}
 	}
 
+//Contador de puntuacion
+	function setScore(dulcesCount) {
+		var score = Number($('#score-text').text());
+		switch (dulcesCount) {
+			case 3:
+				score += 25;
+				break;
+			case 4:
+				score += 50;
+				break;
+			case 5:
+				score += 75;
+				break;
+			case 6:
+				score += 100;
+				break;
+			case 7:
+				score += 200;
+		}
+		$('#score-text').text(score);
+	}
+
+//Colocar dulces en el tablero
+	function checkBoard() {
+		fillBoard();
+	}
+
+	function fillBoard() {
+		var top = 6;
+		var column = $('[class^="col-"]');
+	
+		column.each(function () {
+			var dulces = $(this).children().length;
+			var agregar = top - dulces;
+			for (var i = 0; i < agregar; i++) {
+				var dulcesType = randomInt(1, 5);
+				if (i === 0 && dulces < 1) {
+					$(this).append('<img src="image/' + dulcesType + '.png" class="element"></img>');
+				} else {
+					$(this).find('img:eq(0)').before('<img src="image/' + dulcesType + '.png" class="element"></img>');
+				}
+			}
+		});
+
+		agregarEventosDulces()
+		validaciones()
+	}
+
+
+//Validacion
 	function validaciones() {
 		validacionColumn()
 		validacionRow()
 		if ($('img.delete').length !== 0) {
-			//animacion borrar
+			dulcesAnimDelete()
 		}
 	}
 
 
+//Interaccion de usuarios con caramelos
+	function agregarEventosDulces() {
+	$('img').draggable({
+		containment: '.panel-tablero',
+		droppable: 'img',
+		revert: true,
+		revertDuration: 500,
+		grid: [100, 100],
+		zIndex: 10,
+		axis: "x y",
+		drag: dulcesMovimientos
+	});
+	$('img').droppable({
+		drop: dulcesSwap
+	});
+	dulcesEventosActivar();
+	}
+
+function eventosDulcesDesactivar() {
+	$('img').draggable('disable');
+	$('img').droppable('disable');
+}
+
+function dulcesEventosActivar() {
+	$('img').draggable('enable');
+	$('img').droppable('enable');
+}
+
+function dulcesMovimientos(event, dulcesDrag) {
+	dulcesDrag.position.top = Math.min(100, dulcesDrag.position.top);
+	dulcesDrag.position.bottom = Math.min(100, dulcesDrag.position.bottom);
+	dulcesDrag.position.left = Math.min(100, dulcesDrag.position.left);
+	dulcesDrag.position.right = Math.min(100, dulcesDrag.position.right);
+}
+
+function dulcesSwap(event, dulcesDrag) {
+	var dulcesDrag = $(dulcesDrag.draggable);
+	var dragSrc = dulcesDrag.attr('src');
+	var dulcesDrop = $(this);
+	var dropSrc = dulcesDrop.attr('src');
+	dulcesDrag.attr('src', dropSrc);
+	dulcesDrop.attr('src', dragSrc);
+
+	setTimeout(function () {
+		checkBoard();
+		if ($('img.delete').length === 0) {
+			dulcesDrag.attr('src', dragSrc);
+			dulcesDrop.attr('src', dropSrc);
+		} else {
+			updateMoves();
+		}
+	}, 500);
+
+}
+
+function checkBoardPromise(result) {
+	if (result) {
+		checkBoard();
+	}
+}
+
+function updateMoves() {
+	var actualValue = Number($('#movimientos-text').text());
+	var result = actualValue += 1;
+	$('#movimientos-text').text(result);
+}
+
+function dulcesAnimDelete() {
+	eventosDulcesDesactivar();
+	$('img.delete').effect('pulsate', 400);
+	$('img.delete').animate({
+			opacity: '0'
+		}, {
+			duration: 300
+		})
+		.animate({
+			opacity: '0'
+		}, {
+			duration: 400,
+			complete: function () {
+				dulcesDelete()
+					.then(checkBoardPromise)
+					.catch(showPromiseError);
+			},
+			queue: true
+		});
+}
+
+function showPromiseError(error) {
+	console.log(error);
+}
+
+function dulcesDelete() {
+	return new Promise(function (resolve, reject) {
+		if ($('img.delete').remove()) {
+			resolve(true);
+		} else {
+			reject('No se pudo eliminar Dulce...');
+		}
+	})
+}
+
+//Inicio de Juego y temporizador
+
+	function initGame() {
+		$('.btn-reinicio').click(function () {
+			if ($(this).text() === 'Reiniciar') {
+				location.reload(true)
+			}
+
+			checkBoard();
+			$(this).text('Reiniciar')
+			$('#timer').startTimer({
+				onComplete: endGame
+			})
+		});
+	}
+
+//Final del juego
+
+	function endGame() {
+		$('div.panel-tablero, div.time').effect('fold');
+		$('h1.main-titulo').addClass('title-over').text('¡Gracias por jugar!');
+		$('div.score, div.moves, div.panel-score').width('100%');
+		
+	}
 
 
 
+$(function() {
+	initGame()
+});
 
 
 
-
-
-
-
-})
