@@ -90,5 +90,147 @@ $(function(){
 			}
 		});
 
+		validaciones();
 	}
+
+//Validacion de dulces del mismo tipo
+	//Columnas
+	function validacionColumn() {
+		for (var a = 0; a < 7; a++) {
+			var contador = 0;
+			var dulcesPosition = [];
+			var dulcesEPosition = [];
+			var dulcesColumn = candyColumns(i);
+			var comparisonValue = dulcesColumn.eq(0);
+			var gap = false;
+
+			for (var i = 1; i < dulcesColumn.length; i++) {
+				var srcComparison = comparisonValue.attr('src');
+				var srcDulces = dulcesColumn.eq(i).attr('src');
+	
+				if (srcComparison != srcDulces) {
+					if (dulcesPosition.length >= 3) {
+						gap = true;
+					} else {
+						dulcesPosition = [];
+					}
+					contador = 0;
+				} else {
+					if (contador == 0) {
+						if (!gap) {
+							dulcesPosition.push(i - 1);
+						} else {
+							dulcesEPosition.push(i - 1);
+						}
+					}
+					if (!gap) {
+						dulcesPosition.push(i);
+					} else {
+						dulcesEPosition.push(i);
+					}
+					contador += 1;
+				}
+				comparisonValue = dulcesColumn.eq(i);
+			}
+			if (dulcesEPosition.length > 2) {
+				dulcesPosition = $.merge(dulcesPosition, dulcesEPosition);
+			}
+
+			if (dulcesPosition.length <= 2) {
+				dulcesPosition = [];
+			}
+
+			dulcesCount = dulcesPosition.length;
+			if (dulcesCount >= 3) {
+				borrarDulcesColumn(dulcesPosition, dulcesColumn);
+				setScore(dulcesCount);
+			}
+		}
+	}
+
+	function borrarDulcesColumn(dulcesPosition, dulcesColumn) {
+		for (var i = 0; i < dulcesPosition.length; i++) {
+			dulcesColumn.eq(dulcesPosition[i]).addClass('delete');
+		}
+	}
+
+	//Filas
+	function validacionRow() {
+		for (var a = 0; a < 6; a++) {
+			var contador = 0;
+			var dulcesPosition = [];
+			var dulcesEPosition = [];
+			var dulcesRow = dulcesRows(j);
+			var comparisonValue = dulcesRow[0];
+			var gap = false;
+
+			for (var i = 1; i < dulcesRow.length; i++) {
+				var srcComparison = comparisonValue.attr('src');
+				var srcDulces = dulcesRow[i].attr('src');
+
+				if (srcComparison != srcDulces) {
+					if (dulcesPosition.length >= 3) {
+						gap = true;
+					} else {
+						dulcesPosition = [];
+					}
+					contador = 0;
+				} else {
+					if (contador == 0) {
+						if (!gap) {
+							dulcesPosition.push(i - 1);
+						} else {
+							dulcesEPosition.push(i - 1);
+						}
+					}
+					if (!gap) {
+						dulcesPosition.push(i);
+					} else {
+						dulcesEPosition.push(i);
+					}
+					contador += 1;
+				}
+				comparisonValue = dulcesRow[i];
+			}
+			if (dulcesEPosition.length > 2) {
+				dulcesPosition = $.merge(dulcesPosition, dulcesEPosition);
+			}
+
+			if (dulcesPosition.length <= 2) {
+				dulcesPosition = [];
+			}
+
+			dulcesCount = dulcesPosition.length;
+			if (dulcesCount >= 3) {
+				deleteHorizontal(dulcesPosition, dulcesRow);
+				setScore(dulcesCount);
+			}
+		}
+	}
+
+	function deleteHorizontal(dulcesPosition, dulcesRow) {
+		for (var i = 0; i < dulcesPosition.length; i++) {
+			dulcesRow[dulcesPosition[i]].addClass('delete');
+		}
+	}
+
+	function validaciones() {
+		validacionColumn()
+		validacionRow()
+		if ($('img.delete').length !== 0) {
+			//animacion borrar
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 })
