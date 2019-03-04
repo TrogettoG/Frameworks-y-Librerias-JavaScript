@@ -64,8 +64,31 @@ $(function(){
 	}
 //Array columnas
 	function dulcesColumns(index) {
-	var candyColumn = dulcesArrays('columns')
-	return dulcesColumn[index];
+		var dulcesColumn = dulcesArrays('columns')
+		return dulcesColumn[index];
 	}
 
+//Colocar dulces en el tablero
+	function checkBoard() {
+		fillBoard();
+	}
+
+	function fillBoard() {
+		var top = 6;
+		var column = $('[class^="col-"]');
+	
+		column.each(function () {
+			var dulces = $(this).children().length;
+			var agregar = top - dulces;
+			for (var i = 0; i < agregar; i++) {
+				var dulcesType = randomInt(1, 5);
+				if (i === 0 && dulces < 1) {
+					$(this).append('<img src="image/' + dulcesType + '.png" class="element"></img>');
+				} else {
+					$(this).find('img:eq(0)').before('<img src="image/' + dulcesType + '.png" class="element"></img>');
+				}
+			}
+		});
+
+	}
 })
